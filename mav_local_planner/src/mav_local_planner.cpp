@@ -200,9 +200,6 @@ void MavLocalPlanner::planningTimerCallback(const ros::TimerEvent& event) {
 }
 
 void MavLocalPlanner::planningStep() {
-  ROS_INFO(
-      "[Mav Local Planner][Plan Step] Waypoint index: %zd Total waypoints: %zu",
-      current_waypoint_, waypoints_.size());
   if (current_waypoint_ < 0 ||
       static_cast<int>(waypoints_.size()) <= current_waypoint_) {
     // This means that we probably planned to the end of the waypoints!
@@ -214,6 +211,9 @@ void MavLocalPlanner::planningStep() {
 
     // If we're not though, we should probably double check the trajectory!
   }
+  ROS_INFO(
+      "[Mav Local Planner][Plan Step] Waypoint index: %zd Total waypoints: %zu",
+      current_waypoint_, waypoints_.size());
 
   mav_trajectory_generation::timing::MiniTimer timer;
   constexpr double kCloseToOdometry = 0.1;
@@ -585,36 +585,37 @@ void MavLocalPlanner::commandPublishTimerCallback(
     msg.header.frame_id = local_frame_id_;
     msg.header.stamp = ros::Time::now();
 
-    /*ROS_INFO(
-        "[Mav Local Planner][Command Publish] Publishing %zu samples of %zu. "
-        "Start index: %zu Time: %f Start position: %f Start velocity: %f End "
-        "time: %f End position: %f",
-        trajectory_to_publish.size(), path_queue_.size(), starting_index,
-        trajectory_to_publish.front().time_from_start_ns * 1.0e-9,
-        trajectory_to_publish.front().position_W.x(),
-        trajectory_to_publish.front().velocity_W.x(),
-        trajectory_to_publish.back().time_from_start_ns * 1.0e-9,
-        trajectory_to_publish.back().position_W.x());*/
-    ROS_INFO(
-        "[Mav Local Planner][Command Publish] \n"
-        "Start Time: %.3f, Position: %.2f %.2f %.2f, Velocity: %.2f %.2f %.2f\n"
-        "End   Time: %.3f, Position: %.2f %.2f %.2f, Velocity: %.2f %.2f %.2f",
-        trajectory_to_publish.front().time_from_start_ns * 1.0e-9,
-        trajectory_to_publish.front().position_W.x(),
-        trajectory_to_publish.front().position_W.y(),
-        trajectory_to_publish.front().position_W.z(),
-        trajectory_to_publish.front().velocity_W.x(),
-        trajectory_to_publish.front().velocity_W.y(),
-        trajectory_to_publish.front().velocity_W.z(),
-        trajectory_to_publish.back().time_from_start_ns * 1.0e-9,
-        trajectory_to_publish.back().position_W.x(),
-        trajectory_to_publish.back().position_W.y(),
-        trajectory_to_publish.back().position_W.z(),
-        trajectory_to_publish.back().velocity_W.x(),
-        trajectory_to_publish.back().velocity_W.y(),
-        trajectory_to_publish.back().velocity_W.z());
-    mav_msgs::msgMultiDofJointTrajectoryFromEigen(trajectory_to_publish, &msg);
+    if (verbose_) {
+      /*ROS_INFO(
+          "[Mav Local Planner][Command Publish] Publishing %zu samples of %zu. "
+          "Start index: %zu Time: %f Start position: %f Start velocity: %f End "
+          "time: %f End position: %f",
+          trajectory_to_publish.size(), path_queue_.size(), starting_index,
+          trajectory_to_publish.front().time_from_start_ns * 1.0e-9,
+          trajectory_to_publish.front().position_W.x(),
+          trajectory_to_publish.front().velocity_W.x(),
+          trajectory_to_publish.back().time_from_start_ns * 1.0e-9,
+          trajectory_to_publish.back().position_W.x());*/
+      ROS_INFO("[Mav Local Planner][Command Publish] \n"
+               "Start Time: %.3f, Position: %.2f %.2f %.2f, Velocity: %.2f %.2f %.2f\n"
+               "End   Time: %.3f, Position: %.2f %.2f %.2f, Velocity: %.2f %.2f %.2f",
+               trajectory_to_publish.front().time_from_start_ns * 1.0e-9,
+               trajectory_to_publish.front().position_W.x(),
+               trajectory_to_publish.front().position_W.y(),
+               trajectory_to_publish.front().position_W.z(),
+               trajectory_to_publish.front().velocity_W.x(),
+               trajectory_to_publish.front().velocity_W.y(),
+               trajectory_to_publish.front().velocity_W.z(),
+               trajectory_to_publish.back().time_from_start_ns * 1.0e-9,
+               trajectory_to_publish.back().position_W.x(),
+               trajectory_to_publish.back().position_W.y(),
+               trajectory_to_publish.back().position_W.z(),
+               trajectory_to_publish.back().velocity_W.x(),
+               trajectory_to_publish.back().velocity_W.y(),
+               trajectory_to_publish.back().velocity_W.z());
+    }
 
+    mav_msgs::msgMultiDofJointTrajectoryFromEigen(trajectory_to_publish, &msg);
     command_pub_.publish(msg);
     path_index_ += number_to_publish;
     should_replan_.notify();
