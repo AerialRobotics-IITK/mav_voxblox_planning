@@ -26,14 +26,16 @@ MavLocalPlanner::MavLocalPlanner(const ros::NodeHandle& nh,
       path_index_(0),
       max_failures_(5),
       num_failures_(0),
-      esdf_server_(nh_, nh_private_),
       loco_planner_(nh_, nh_private_) {
+  getParamsFromRos();
+  setupRosCommunication();
+  startTimers();
+}
+
+void MavLocalPlanner::getParamsFromRos() {
   // Set up some settings.
   constraints_.setParametersFromRos(nh_private_);
-  esdf_server_.setTraversabilityRadius(constraints_.robot_radius);
-  loco_planner_.setEsdfMap(esdf_server_.getEsdfMapPtr());
   goal_selector_.setParametersFromRos(nh_private_);
-  goal_selector_.setTsdfMap(esdf_server_.getTsdfMapPtr());
 
   nh_private_.param("verbose", verbose_, verbose_);
   nh_private_.param("global_frame_id", global_frame_id_, global_frame_id_);
@@ -49,20 +51,9 @@ MavLocalPlanner::MavLocalPlanner(const ros::NodeHandle& nh,
   nh_private_.param("autostart", autostart_, autostart_);
   nh_private_.param("plan_to_start", plan_to_start_, plan_to_start_);
   nh_private_.param("smoother_name", smoother_name_, smoother_name_);
+}
 
-  // load map to esdf_server_
-  std::string map_path;
-  nh_private_.param("map_path", map_path, map_path);
-  if (!map_path.empty()) {
-    ROS_INFO_STREAM("[Mav Local Planner] loading map from " << map_path);
-    bool success = esdf_server_.loadMap(map_path);
-    if (!success) {
-      ROS_WARN("[Mav Local Planner] could not load map!");
-    } else {
-      ROS_INFO("[Mav Local Planner] loaded map successfully");
-    }
-  }
-
+void MavLocalPlanner::setupRosCommunication() {
   // Publishers and subscribers.
   odometry_sub_ = nh_.subscribe(mav_msgs::default_topics::ODOMETRY, 1,
                                 &MavLocalPlanner::odometryCallback, this);
@@ -90,7 +81,9 @@ MavLocalPlanner::MavLocalPlanner(const ros::NodeHandle& nh,
 
   position_hold_client_ =
       nh_.serviceClient<std_srvs::Empty>("back_to_position_hold");
+}
 
+void MavLocalPlanner::startTimers() {
   // Start the planning timer. Will no-op most cycles.
   ros::TimerOptions timer_options(
       ros::Duration(replan_dt_),
@@ -102,13 +95,34 @@ MavLocalPlanner::MavLocalPlanner(const ros::NodeHandle& nh,
   // Start the command publishing spinner.
   command_publishing_spinner_.start();
   planning_spinner_.start();
+}
 
+void MavLocalPlanner::setupMap() {
+  esdf_server_ptr_->setTraversabilityRadius(constraints_.robot_radius);
+  loco_planner_.setEsdfMap(esdf_server_ptr_->getEsdfMapPtr());
+  goal_selector_.setTsdfMap(esdf_server_ptr_->getTsdfMapPtr());
+
+  // load map to esdf_server_
+  std::string map_path;
+  nh_private_.param("map_path", map_path, map_path);
+  if (!map_path.empty()) {
+    ROS_INFO_STREAM("[Mav Local Planner] loading map from " << map_path);
+    bool success = esdf_server_ptr_->loadMap(map_path);
+    if (!success) {
+      ROS_WARN("[Mav Local Planner] could not load map!");
+    } else {
+      ROS_INFO("[Mav Local Planner] loaded map successfully");
+    }
+  }
+}
+
+void MavLocalPlanner::setupSmoothers() {
   // Set up yaw policy.
   yaw_policy_.setPhysicalConstraints(constraints_);
   yaw_policy_.setYawPolicy(YawPolicy::PolicyType::kVelocityVector);
 
   // Set up smoothers.
-  const double voxel_size = esdf_server_.getEsdfMapPtr()->voxel_size();
+  const double voxel_size = esdf_server_ptr_->getEsdfMapPtr()->voxel_size();
 
   // Straight-line smoother.
   ramp_smoother_.setParametersFromRos(nh_private_);
@@ -695,7 +709,7 @@ void MavLocalPlanner::visualizePath() {
 double MavLocalPlanner::getMapDistance(const Eigen::Vector3d& position) const {
   double distance = 0.0;
   const bool kInterpolate = false;
-  if (!esdf_server_.getEsdfMapPtr()->getDistanceAtPosition(
+  if (!esdf_server_ptr_->getEsdfMapPtr()->getDistanceAtPosition(
           position, kInterpolate, &distance)) {
     return 0.0;
   }
@@ -706,7 +720,7 @@ double MavLocalPlanner::getMapDistanceAndGradient(
     const Eigen::Vector3d& position, Eigen::Vector3d* gradient) const {
   double distance = 0.0;
   const bool kInterpolate = false;
-  if (!esdf_server_.getEsdfMapPtr()->getDistanceAndGradientAtPosition(
+  if (!esdf_server_ptr_->getEsdfMapPtr()->getDistanceAndGradientAtPosition(
           position, kInterpolate, &distance, gradient)) {
     return 0.0;
   }

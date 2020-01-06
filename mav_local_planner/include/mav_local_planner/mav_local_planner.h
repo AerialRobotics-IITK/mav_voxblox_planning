@@ -52,13 +52,20 @@ class MavLocalPlanner {
                     std_srvs::Empty::Response& response);
 
   // Visualizations.
-  void visualizePath();
+  virtual void visualizePath();
 
   // TODO -- TO IMPLEMENT:
   void polynomialTrajectoryCallback(
       const mav_planning_msgs::PolynomialTrajectory4D& msg) {}
 
- private:
+ protected:
+  // Initializing functions.
+  void getParamsFromRos();
+  void setupRosCommunication();
+  void startTimers();
+  void setupMap();
+  void setupSmoothers();
+
   // Control for publishing.
   void startPublishingCommands();
   void commandPublishTimerCallback(const ros::TimerEvent& event);
@@ -179,7 +186,7 @@ class MavLocalPlanner {
   int num_failures_;
 
   // Map!
-  voxblox::EsdfServer esdf_server_;
+  voxblox::EsdfServer* esdf_server_ptr_;
 
   // Planners -- yaw policy
   YawPolicy yaw_policy_;
@@ -195,6 +202,21 @@ class MavLocalPlanner {
   // Intermediate goal selection, optionally in case of path-planning failures:
   GoalPointSelector goal_selector_;
   bool temporary_goal_;
+};
+
+class MavLocalVoxbloxPlanner : public MavLocalPlanner {
+public:
+  MavLocalVoxbloxPlanner(const ros::NodeHandle& nh,
+      const ros::NodeHandle& nh_private)
+    : MavLocalPlanner(nh, nh_private), esdf_server_(nh, nh_private) {
+    esdf_server_ptr_ = &esdf_server_;
+    setupMap();
+    setupSmoothers();
+  };
+
+protected:
+  // Map!
+  voxblox::EsdfServer esdf_server_;
 };
 
 }  // namespace mav_planning
