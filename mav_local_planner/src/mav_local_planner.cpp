@@ -554,16 +554,6 @@ void MavLocalPlanner::commandPublishTimerCallback(
     msg.header.stamp = ros::Time::now();
 
     ROS_INFO(
-        "[Mav Local Planner][Command Publish] Publishing %zu samples of %zu. "
-        "Start index: %zu Time: %f Start position: %f Start velocity: %f End "
-        "time: %f End position: %f",
-        trajectory_to_publish.size(), path_queue_.size(), starting_index,
-        trajectory_to_publish.front().time_from_start_ns * 1.0e-9,
-        trajectory_to_publish.front().position_W.x(),
-        trajectory_to_publish.front().velocity_W.x(),
-        trajectory_to_publish.back().time_from_start_ns * 1.0e-9,
-        trajectory_to_publish.back().position_W.x());
-    ROS_INFO(
         "[Mav Local Planner][Command Publish] \n"
         "Start Time: %.3f, Position: %.2f %.2f %.2f, Velocity: %.2f %.2f %.2f\n"
         "End   Time: %.3f, Position: %.2f %.2f %.2f, Velocity: %.2f %.2f %.2f",
