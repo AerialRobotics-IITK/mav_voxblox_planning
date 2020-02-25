@@ -50,4 +50,4 @@ class VoxbloxRrtPlanner : public RrtPlanner, public VoxbloxPlanner {
 
 }  // namespace mav_planning
 
-#endif  //VOXBLOX_RRT_PLANNER_RRT_PLANNER_VOXBLOX_H
+#endif  // VOXBLOX_RRT_PLANNER_RRT_PLANNER_VOXBLOX_H

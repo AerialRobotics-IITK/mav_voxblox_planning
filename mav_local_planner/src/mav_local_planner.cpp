@@ -164,7 +164,6 @@ void MavLocalPlanner::waypointListCallback(
   clearTrajectory();
 
   waypoints_.clear();
-  ROS_INFO("[Mav Local Planner] cleared trajectory");
 
   for (const geometry_msgs::Pose& pose : msg.poses) {
     mav_msgs::EigenTrajectoryPoint waypoint;
@@ -172,15 +171,10 @@ void MavLocalPlanner::waypointListCallback(
     waypoints_.push_back(waypoint);
   }
   current_waypoint_ = 0;
-  ROS_INFO("[Mav Local Planner] updated trajectory");
 
   // Execute one planning step on main thread.
   planningStep();
-  ROS_INFO("[Mav Local Planner] finished planning step");
   startPublishingCommands();
-  ROS_INFO_STREAM("[Mav Local Planner] Current odometry: "
-                      << odometry_.position_W.transpose());
-  ROS_INFO("[Mav Local Planner] finished processing list of waypoints.");
 }
 
 void MavLocalPlanner::planningTimerCallback(const ros::TimerEvent& event) {
@@ -473,23 +467,6 @@ bool MavLocalPlanner::planPathThroughWaypoints(
 
   } else if (smoother_name_ == "ramp") {
     success = ramp_smoother_.getPathBetweenWaypoints(waypoints, path);
-
-    if (verbose_) {
-      for (int i = 0; i < path->size(); i++) {
-        Eigen::Vector3d s = (*path)[i].position_W;
-        Eigen::Vector3d v = (*path)[i].velocity_W;
-            ROS_INFO("\n%d: %.2f (%.2f, %.2f %.2f) - (%.2f, %.2f, %.2f)",
-                     i, (*path)[i].time_from_start_ns / 10e6, s.x(), s.y(), s.z(), v.x(), v.y(), v.z());
-      }
-      ROS_INFO("[Mav Local Planner] ramp smoother: %lu waypoints to %lu path queue",
-               waypoints.size(), path->size());
-    }
-
-  } else if (smoother_name_ == "none") {
-    *path = waypoints;
-    success = true;
-    ROS_INFO("[Mav Local Planner] no smoother: %lu waypoints",
-        waypoints.size());
   } else {
     // Default case is ramp!
     ROS_ERROR(
@@ -497,8 +474,6 @@ bool MavLocalPlanner::planPathThroughWaypoints(
         smoother_name_.c_str());
     success = ramp_smoother_.getPathBetweenWaypoints(waypoints, path);
   }
-  ROS_INFO("[Mav Local Planner] smoother: %lu waypoints to %lu path queue",
-      waypoints.size(), path->size());
   return success;
 }
 
@@ -529,7 +504,6 @@ void MavLocalPlanner::replacePath(
 void MavLocalPlanner::startPublishingCommands() {
   // Call the service call to takeover publishing commands.
   if (position_hold_client_.exists()) {
-    ROS_INFO("[Mav Local Planner] position_hold_client_ is taking over");
     std_srvs::Empty empty_call;
     position_hold_client_.call(empty_call);
   }
@@ -544,8 +518,6 @@ void MavLocalPlanner::startPublishingCommands() {
       &command_publishing_queue_);
 
   command_publishing_timer_ = nh_.createTimer(timer_options);
-
-  ROS_INFO("[Mav Local Planner] started publishing commands successfully");
 }
 
 void MavLocalPlanner::commandPublishTimerCallback(
@@ -581,7 +553,7 @@ void MavLocalPlanner::commandPublishTimerCallback(
     msg.header.frame_id = local_frame_id_;
     msg.header.stamp = ros::Time::now();
 
-    /*ROS_INFO(
+    ROS_INFO(
         "[Mav Local Planner][Command Publish] Publishing %zu samples of %zu. "
         "Start index: %zu Time: %f Start position: %f Start velocity: %f End "
         "time: %f End position: %f",
@@ -590,7 +562,7 @@ void MavLocalPlanner::commandPublishTimerCallback(
         trajectory_to_publish.front().position_W.x(),
         trajectory_to_publish.front().velocity_W.x(),
         trajectory_to_publish.back().time_from_start_ns * 1.0e-9,
-        trajectory_to_publish.back().position_W.x());*/
+        trajectory_to_publish.back().position_W.x());
     ROS_INFO(
         "[Mav Local Planner][Command Publish] \n"
         "Start Time: %.3f, Position: %.2f %.2f %.2f, Velocity: %.2f %.2f %.2f\n"
