@@ -20,7 +20,7 @@
 #include <minkindr_conversions/kindr_msg.h>
 #include <voxblox_ros/esdf_server.h>
 
-#include <mav_planning_voxblox/map_interface.h>
+#include <mav_voxel_planning/map_interface.h>
 #include "voxblox_rrt_planner/voxblox_ompl_rrt.h"
 
 namespace mav_planning {

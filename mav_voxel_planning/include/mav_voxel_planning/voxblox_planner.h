@@ -6,7 +6,7 @@
 #include <memory>
 #include <string>
 
-#include <mav_planning_voxblox/map_interface.h>
+#include <mav_voxel_planning/map_interface.h>
 #include <voxblox_ros/esdf_server.h>
 #include <voxblox/core/tsdf_map.h>
 #include <voxblox/core/esdf_map.h>
