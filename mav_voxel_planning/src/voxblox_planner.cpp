@@ -36,8 +36,6 @@ void VoxbloxPlanner::initializeMap() {
     ROS_ERROR("TSDF map also empty! Check voxel size!");
   }
 
-  voxblox_server_.setTraversabilityRadius(constraints_.robot_radius);
-
   voxel_size_ =
       voxblox_server_.getEsdfMapPtr()->getEsdfLayerPtr()->voxel_size();
 
