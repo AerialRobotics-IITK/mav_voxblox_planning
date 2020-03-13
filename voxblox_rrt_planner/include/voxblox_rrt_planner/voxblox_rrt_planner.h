@@ -36,6 +36,7 @@ class VoxbloxRrtPlanner : public RrtPlanner, public VoxbloxPlanner {
 
   // constructor functions
   void setupPlannerAndSmootherMap();
+  void initializeMap();
 
  protected:
   void setupRrtPlanner();
