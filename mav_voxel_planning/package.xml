@@ -1,14 +1,15 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>mav_planning_voxblox</name>
+  <name>mav_voxel_planning</name>
   <version>0.0.0</version>
   <description>
-    Common planning utilities.
+    Package containing the general planner structure
+    to enable interfacing and inheritance.
   </description>
 
-  <author email="helen.oleynikova@mavt.ethz.ch">Helen Oleynikova</author>
+  <author email="laura.gasser@mavt.ethz.ch">Laura Gasser</author>
 
-  <maintainer email="helen.oleynikova@mavt.ethz.ch">Helen Oleynikova</maintainer>
+  <maintainer email="laura.gasser@mavt.ethz.ch">Laura Gasser</maintainer>
 
   <license>BSD</license>
 
