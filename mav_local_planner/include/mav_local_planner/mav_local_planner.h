@@ -66,6 +66,12 @@ class MavLocalPlanner {
   // Control for planning.
   void planningTimerCallback(const ros::TimerEvent& event);
   void planningStep();
+  bool findPathThroughCurrentWaypointList(
+      const mav_msgs::EigenTrajectoryPoint& start,
+      const mav_msgs::EigenTrajectoryPointVector& waypoint_list,
+      const size_t& temporary_waypoints,
+      mav_msgs::EigenTrajectoryPointVector* path,
+      size_t* waypoint_index);
 
   // Returns if the next waypoint is a valid waypoint.
   bool nextWaypoint();
@@ -177,6 +183,7 @@ class MavLocalPlanner {
   // State -- planning.
   int max_failures_;
   int num_failures_;
+  int num_tracking_;
 
   // Map!
   voxblox::EsdfServer esdf_server_;
